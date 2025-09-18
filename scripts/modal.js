@@ -26,7 +26,7 @@ function closePaymentModal() {
 }
 
 function validateApplicationForm(formData) {
-	const requiredFields = ['fullName', 'email', 'phone', 'propertyAddress', 'landSize'];
+    const requiredFields = ['fullName', 'email', 'phone', 'propertyAddress', 'landSize', 'productName', 'productPrice', 'productQuantity'];
 	const errors = [];
 	
 	// Clear previous errors
@@ -74,6 +74,24 @@ function validateApplicationForm(formData) {
 		}
 		if (inputEl) inputEl.classList.add('error');
 	}
+
+    // product numeric validations
+    const priceNum = Number(formData.productPrice);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+        const errorEl = document.getElementById('productPrice-error');
+        const inputEl = document.getElementById('productPrice');
+        if (errorEl) { errorEl.textContent = 'Enter a valid price'; errorEl.classList.add('show'); }
+        if (inputEl) inputEl.classList.add('error');
+        errors.push('Enter a valid price');
+    }
+    const qtyNum = Number(formData.productQuantity);
+    if (!Number.isInteger(qtyNum) || qtyNum < 1) {
+        const errorEl = document.getElementById('productQuantity-error');
+        const inputEl = document.getElementById('productQuantity');
+        if (errorEl) { errorEl.textContent = 'Enter a valid quantity (>=1)'; errorEl.classList.add('show'); }
+        if (inputEl) inputEl.classList.add('error');
+        errors.push('Enter a valid quantity');
+    }
 	
 	return { isValid: errors.length === 0, errors };
 }
@@ -84,7 +102,11 @@ function processPayment() {
 		email: document.getElementById('email')?.value || '',
 		phone: document.getElementById('phone')?.value || '',
 		propertyAddress: document.getElementById('propertyAddress')?.value || '',
-		landSize: document.getElementById('landSize')?.value || ''
+		landSize: document.getElementById('landSize')?.value || '',
+		productName: document.getElementById('productName')?.value || '',
+		productPrice: document.getElementById('productPrice')?.value || '',
+		productQuantity: document.getElementById('productQuantity')?.value || '1',
+		productDescription: document.getElementById('productDescription')?.value || ''
 	};
 	
 	const validation = validateApplicationForm(formData);
@@ -109,8 +131,11 @@ function processPayment() {
 		BluePay.init('blue_test_289de48ef5e64');
 		console.log('Processing payment for ₦48,000');
 		BluePay.checkout({
-			amount: "48000",
-			productID: '19985',
+			amount: String(Number(formData.productPrice) * Math.max(1, Number(formData.productQuantity) || 1)),
+			productName: formData.productName,
+			price: String(Number(formData.productPrice)),
+			quantity: String(Number(formData.productQuantity) || 1),
+			description: formData.productDescription || undefined,
 			payerEmail: formData.email,
 			cardHolderName: formData.fullName,
 			payerPhoneNumber: formData.phone,
