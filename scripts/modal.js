@@ -2,6 +2,22 @@ window.initModal = function(){};
 // Prevent double submits without disabling the button (preserves user gesture)
 window.__isPaying = false;
 
+function updatePaymentSummary() {
+    const name = document.getElementById('productName')?.value || '';
+    const priceStr = document.getElementById('productPrice')?.value || '0';
+    const qtyStr = document.getElementById('productQuantity')?.value || '1';
+    const price = Number(priceStr) || 0;
+    const qty = Math.max(1, Number(qtyStr) || 1);
+    const total = price * qty;
+
+    const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' });
+    const el = (id, val) => { const n = document.getElementById(id); if (n) n.textContent = val; };
+    el('summaryName', name || '—');
+    el('summaryPrice', fmt.format(price));
+    el('summaryQuantity', String(qty));
+    el('summaryTotal', fmt.format(total));
+}
+
 function openPaymentPortal() {
 	const modal = document.getElementById('paymentModal');
 	// Close mobile drawer if open
@@ -14,6 +30,8 @@ function openPaymentPortal() {
 	if (modal) {
 		modal.classList.add('active');
 		document.body.style.overflow = 'hidden';
+		// initialize or refresh summary on open
+		updatePaymentSummary();
 	}
 }
 
@@ -175,5 +193,13 @@ document.addEventListener('keydown', function(e) {
 	if (e.key === 'Escape') {
 		closePaymentModal();
 	}
+});
+
+// Live update summary when product fields change
+document.addEventListener('input', function(e) {
+    const id = (e.target && e.target.id) || '';
+    if (id === 'productName' || id === 'productPrice' || id === 'productQuantity') {
+        updatePaymentSummary();
+    }
 });
 
