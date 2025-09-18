@@ -3,8 +3,12 @@ window.initModal = function(){};
 window.__isPaying = false;
 
 function updatePaymentSummary() {
-    const name = document.getElementById('productName')?.value || '';
-    const priceStr = document.getElementById('productPrice')?.value || '0';
+    const selectEl = document.getElementById('productNameSelect');
+    const name = (selectEl && selectEl.value) || document.getElementById('productName')?.value || '';
+    // If a service is selected and has a data-price, prefer it over manual input
+    const selectedPrice = selectEl && selectEl.selectedOptions && selectEl.selectedOptions[0] ? Number(selectEl.selectedOptions[0].dataset.price || '0') : 0;
+    const priceInputStr = document.getElementById('productPrice')?.value || '0';
+    const priceStr = selectedPrice > 0 ? String(selectedPrice) : priceInputStr;
     const qtyStr = document.getElementById('productQuantity')?.value || '1';
     const price = Number(priceStr) || 0;
     const qty = Math.max(1, Number(qtyStr) || 1);
@@ -16,6 +20,9 @@ function updatePaymentSummary() {
     el('summaryPrice', fmt.format(price));
     el('summaryQuantity', String(qty));
     el('summaryTotal', fmt.format(total));
+    // Update dynamic pay button label
+    const payBtn = document.getElementById('payBtn');
+    if (payBtn) payBtn.innerText = 'Pay ' + fmt.format(total);
 }
 
 function openPaymentPortal() {
@@ -44,7 +51,7 @@ function closePaymentModal() {
 }
 
 function validateApplicationForm(formData) {
-    const requiredFields = ['fullName', 'email', 'phone', 'propertyAddress', 'landSize', 'productName', 'productPrice', 'productQuantity'];
+    const requiredFields = ['fullName', 'email', 'phone', 'propertyAddress', 'landSize', 'productPrice', 'productQuantity'];
 	const errors = [];
 	
 	// Clear previous errors
@@ -55,21 +62,26 @@ function validateApplicationForm(formData) {
 		if (inputEl) inputEl.classList.remove('error');
 	});
 	
-	requiredFields.forEach(field => {
-		const value = formData[field] || '';
-		const errorEl = document.getElementById(field + '-error');
-		const inputEl = document.getElementById(field);
-		
-		if (!value.trim()) {
-			const fieldName = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-			errors.push(`${fieldName} is required`);
-			if (errorEl) {
-				errorEl.textContent = `${fieldName} is required`;
-				errorEl.classList.add('show');
-			}
-			if (inputEl) inputEl.classList.add('error');
-		}
-	});
+    requiredFields.forEach(field => {
+        const value = formData[field] || '';
+        const errorEl = document.getElementById(field + '-error');
+        const inputEl = document.getElementById(field);
+        if (!value.toString().trim()) {
+            const fieldName = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            errors.push(`${fieldName} is required`);
+            if (errorEl) { errorEl.textContent = `${fieldName} is required`; errorEl.classList.add('show'); }
+            if (inputEl) inputEl.classList.add('error');
+        }
+    });
+
+    // Validate service select
+    const serviceSelect = document.getElementById('productNameSelect');
+    const serviceErr = document.getElementById('productName-error');
+    if (serviceSelect && !serviceSelect.value) {
+        if (serviceErr) { serviceErr.textContent = 'Service is required'; serviceErr.classList.add('show'); }
+        serviceSelect.classList.add('error');
+        errors.push('Service is required');
+    }
 	
 	if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
 		errors.push('Please enter a valid email address');
@@ -115,14 +127,18 @@ function validateApplicationForm(formData) {
 }
 
 function processPayment() {
-	const formData = {
+    const serviceSelect = document.getElementById('productNameSelect');
+    const selectedService = serviceSelect && serviceSelect.value ? serviceSelect.value : '';
+    const selectedPrice = serviceSelect && serviceSelect.selectedOptions && serviceSelect.selectedOptions[0] ? Number(serviceSelect.selectedOptions[0].dataset.price || '0') : 0;
+
+    const formData = {
 		fullName: document.getElementById('fullName')?.value || '',
 		email: document.getElementById('email')?.value || '',
 		phone: document.getElementById('phone')?.value || '',
 		propertyAddress: document.getElementById('propertyAddress')?.value || '',
-		landSize: document.getElementById('landSize')?.value || '',
-		productName: document.getElementById('productName')?.value || '',
-		productPrice: document.getElementById('productPrice')?.value || '',
+        landSize: document.getElementById('landSize')?.value || '',
+        productName: selectedService || document.getElementById('productName')?.value || '',
+        productPrice: selectedPrice > 0 ? String(selectedPrice) : (document.getElementById('productPrice')?.value || ''),
 		productQuantity: document.getElementById('productQuantity')?.value || '1',
 		productDescription: document.getElementById('productDescription')?.value || ''
 	};
@@ -198,7 +214,7 @@ document.addEventListener('keydown', function(e) {
 // Live update summary when product fields change
 document.addEventListener('input', function(e) {
     const id = (e.target && e.target.id) || '';
-    if (id === 'productName' || id === 'productPrice' || id === 'productQuantity') {
+    if (id === 'productName' || id === 'productNameSelect' || id === 'productPrice' || id === 'productQuantity') {
         updatePaymentSummary();
     }
 });

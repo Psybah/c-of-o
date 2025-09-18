@@ -43,8 +43,13 @@
 			<div class="form-section">
 				<h3>Product Details</h3>
 				<div class="form-group">
-					<label for="productName">Product Name</label>
-					<input type="text" id="productName" name="productName" placeholder="e.g. Certificate of Occupancy Application" required>
+					<label for="productNameSelect">Service</label>
+					<select id="productNameSelect" name="productName" required>
+						<option value="" selected disabled>Select a service</option>
+						<option value="Certificate of Occupancy Application" data-price="20000">Certificate of Occupancy Application</option>
+						<option value="Land Title Search" data-price="10000">Land Title Search</option>
+						<option value="Site Plan Approval" data-price="15000">Site Plan Approval</option>
+					</select>
 					<div class="error-message" id="productName-error"></div>
 				</div>
 				<div class="form-group">
