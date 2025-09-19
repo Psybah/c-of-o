@@ -5,10 +5,8 @@ window.__isPaying = false;
 function updatePaymentSummary() {
     const selectEl = document.getElementById('productNameSelect');
     const name = (selectEl && selectEl.value) || document.getElementById('productName')?.value || '';
-    // If a service is selected and has a data-price, prefer it over manual input
-    const selectedPrice = selectEl && selectEl.selectedOptions && selectEl.selectedOptions[0] ? Number(selectEl.selectedOptions[0].dataset.price || '0') : 0;
-    const priceInputStr = document.getElementById('productPrice')?.value || '0';
-    const priceStr = selectedPrice > 0 ? String(selectedPrice) : priceInputStr;
+    // Price field is the source of truth
+    const priceStr = document.getElementById('productPrice')?.value || '0';
     const qtyStr = document.getElementById('productQuantity')?.value || '1';
     const price = Number(priceStr) || 0;
     const qty = Math.max(1, Number(qtyStr) || 1);
@@ -129,7 +127,6 @@ function validateApplicationForm(formData) {
 function processPayment() {
     const serviceSelect = document.getElementById('productNameSelect');
     const selectedService = serviceSelect && serviceSelect.value ? serviceSelect.value : '';
-    const selectedPrice = serviceSelect && serviceSelect.selectedOptions && serviceSelect.selectedOptions[0] ? Number(serviceSelect.selectedOptions[0].dataset.price || '0') : 0;
 
     const formData = {
 		fullName: document.getElementById('fullName')?.value || '',
@@ -138,7 +135,7 @@ function processPayment() {
 		propertyAddress: document.getElementById('propertyAddress')?.value || '',
         landSize: document.getElementById('landSize')?.value || '',
         productName: selectedService || document.getElementById('productName')?.value || '',
-        productPrice: selectedPrice > 0 ? String(selectedPrice) : (document.getElementById('productPrice')?.value || ''),
+        productPrice: document.getElementById('productPrice')?.value || '',
 		productQuantity: document.getElementById('productQuantity')?.value || '1',
 		productDescription: document.getElementById('productDescription')?.value || ''
 	};
