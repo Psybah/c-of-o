@@ -5,8 +5,17 @@ window.__isPaying = false;
 function updatePaymentSummary() {
     const selectEl = document.getElementById('productNameSelect');
     const name = (selectEl && selectEl.value) || document.getElementById('productName')?.value || '';
-    // Price field is the source of truth
-    const priceStr = document.getElementById('productPrice')?.value || '0';
+    // Price now derives from selected service (data-price)
+    const priceStr = (function(){
+        if (selectEl) {
+            const opt = selectEl.options[selectEl.selectedIndex];
+            if (opt && opt.dataset && opt.dataset.price) return opt.dataset.price;
+        }
+        return document.getElementById('productPrice')?.value || '0';
+    })();
+    // Reflect derived price back into the disabled input so downstream reads work
+    const priceInput = document.getElementById('productPrice');
+    if (priceInput) priceInput.value = priceStr || '';
     const qtyStr = document.getElementById('productQuantity')?.value || '1';
     const price = Number(priceStr) || 0;
     const qty = Math.max(1, Number(qtyStr) || 1);
